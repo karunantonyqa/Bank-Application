@@ -37,6 +37,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
@@ -46,6 +47,7 @@ import javax.swing.UIManager;
 import javax.swing.JScrollBar;
 import java.awt.SystemColor;
 import javax.swing.JTextArea;
+import java.awt.Dimension;
 
 public class BankingApplication {
 
@@ -71,6 +73,10 @@ public class BankingApplication {
 	public String createAccountName, createAccountAddress, sql;
 	public String retrieveID, retrieveName, retrieveAddress, retrieveAmount;
 	public String uniqueAccId;
+	String statementText = "";
+	String statementWithText = "";
+	String statementDepText = "";
+	ArrayList<String> statementList = new ArrayList<>();
 	String retrieveDeposit;
 	int retrieveDepositNum = 0;
 	int retrieveWithdrawNum =0;
@@ -166,6 +172,7 @@ public class BankingApplication {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 500, 500);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new CardLayout(0, 0));
 		
@@ -768,6 +775,18 @@ public class BankingApplication {
 		statement_back_btn.setBounds(10, 11, 89, 23);
 		statement_top_panel.add(statement_back_btn);
 		
+		JLabel lblBalance = new JLabel("Balance:");
+		lblBalance.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblBalance.setForeground(new Color(255, 255, 255));
+		lblBalance.setBounds(140, 117, 77, 14);
+		statement_top_panel.add(lblBalance);
+		
+		JLabel statement_balance_label = new JLabel("");
+		statement_balance_label.setForeground(new Color(255, 255, 255));
+		statement_balance_label.setFont(new Font("Tahoma", Font.BOLD, 15));
+		statement_balance_label.setBounds(227, 119, 109, 14);
+		statement_top_panel.add(statement_balance_label);
+		
 		statement_id_field = new JTextField();
 		statement_id_field.setBounds(174, 148, 125, 20);
 		Statement.add(statement_id_field);
@@ -785,16 +804,25 @@ public class BankingApplication {
 		Statement.add(statement_tarea_panel);
 		statement_tarea_panel.setLayout(null);
 		
-		JScrollBar statement_scroll = new JScrollBar();
-		statement_scroll.setForeground(new Color(0, 0, 0));
-		statement_scroll.setBackground(new Color(0, 0, 0));
-		statement_scroll.setBounds(447, 0, 17, 270);
-		statement_tarea_panel.add(statement_scroll);
+		JTextArea statement_dep_text_area = new JTextArea();
+		statement_dep_text_area.setBounds(10, 31, 215, 228);
+		statement_tarea_panel.add(statement_dep_text_area);
 		
-		JTextArea statement_text_area = new JTextArea();
-		statement_text_area.setBackground(new Color(211, 211, 211));
-		statement_text_area.setBounds(10, 11, 430, 248);
-		statement_tarea_panel.add(statement_text_area);
+		JTextArea statement_with_text_area = new JTextArea();
+		statement_with_text_area.setBounds(235, 31, 219, 228);
+		statement_tarea_panel.add(statement_with_text_area);
+		
+		JLabel lblNewLabel = new JLabel("Money in");
+		lblNewLabel.setForeground(new Color(255, 255, 255));
+		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNewLabel.setBounds(83, 6, 62, 14);
+		statement_tarea_panel.add(lblNewLabel);
+		
+		JLabel lblWithdrawals = new JLabel("Money out");
+		lblWithdrawals.setForeground(Color.WHITE);
+		lblWithdrawals.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblWithdrawals.setBounds(305, 6, 107, 14);
+		statement_tarea_panel.add(lblWithdrawals);
 		
 		JButton statement_retrieve_btn = new JButton("Statement");
 		statement_retrieve_btn.addActionListener(new ActionListener() {
@@ -815,6 +843,9 @@ public class BankingApplication {
 					String sqlWithdraw;
 					sql = "SELECT * FROM bank.deposit WHERE account_id ='" + getID + "'";
 					sqlWithdraw = "SELECT * FROM bank.withdraw WHERE account_id ='" + getID + "'";
+					
+					int balance = calculateBalance(getID);
+					statement_balance_label.setText("£" + Integer.toString(balance));
 
 					ResultSet rsBalance = stmt.executeQuery(sql);
 					while(rsBalance.next()) {
@@ -822,9 +853,11 @@ public class BankingApplication {
 						retrieveDepositNum = rsBalance.getInt("amount");
 						String depDate = rsBalance.getString("date");
 						
-						statement_text_area.setText("Amount " + "Date" + "\n" + retrieveDepositNum + " " + depDate);
+						statementDepText += "Amount: " + retrieveDepositNum + "     " + "Date: " + depDate + "\n";
 						
-						System.out.println(retrieveDepositNum + "Deposit:" + depDate);
+						
+						statement_dep_text_area.setText(statementDepText);
+						statement_dep_text_area.setFont(statement_dep_text_area.getFont().deriveFont(9.5f));
 
 					}
 					
@@ -835,12 +868,13 @@ public class BankingApplication {
 						retrieveWithdrawNum = rsWithdraw.getInt("amount");
 						String withDate = rsWithdraw.getString("date");
 						
-						System.out.println(retrieveDepositNum + "Withdraw:" + withDate);
+						statementWithText += "Amount: " + retrieveWithdrawNum + "     " + "Date: " + withDate + "\n";
 
+						statement_with_text_area.setText(statementWithText);
+						statement_with_text_area.setFont(statement_with_text_area.getFont().deriveFont(9.5f));
+				
 					}
 					
-					
-
 					rsBalance.close();
 					rsWithdraw.close();
 					stmt.close();
