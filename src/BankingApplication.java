@@ -623,6 +623,20 @@ public class BankingApplication {
 		withdraw_balance_field.setBounds(179, 72, 160, 20);
 		withdraw_bottom_panel.add(withdraw_balance_field);
 		
+		JLabel withdraw_success_lbl = new JLabel("**Withdraw SUCCESS**");
+		withdraw_success_lbl.setFont(new Font("Tahoma", Font.BOLD, 14));
+		withdraw_success_lbl.setForeground(Color.GREEN);
+		withdraw_success_lbl.setBounds(168, 300, 183, 14);
+		withdraw_success_lbl.setVisible(false);
+		Withdraw.add(withdraw_success_lbl);
+		
+		JLabel withdraw_fail_lbl = new JLabel("**INSUFFICIENTFUNDS**");
+		withdraw_fail_lbl.setForeground(Color.RED);
+		withdraw_fail_lbl.setFont(new Font("Tahoma", Font.BOLD, 14));
+		withdraw_fail_lbl.setBounds(168, 300, 198, 14);
+		withdraw_fail_lbl.setVisible(false);
+		Withdraw.add(withdraw_fail_lbl);
+		
 		JButton withdraw_retrieve_btn = new JButton("Retrieve acc.");
 		withdraw_retrieve_btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -685,23 +699,36 @@ public class BankingApplication {
 					conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/?useSSL=false", "root", "password");
 					stmt = conn.createStatement();
 					
-					int rand =  (int) (Math.random()*1000); 
+					//Generate withdraw id
+					int rand = (int) (Math.random()*1000); 
 					
+					//Get withdrawal amount from field
 					retrieveAmount = withdraw_amountField.getText();
 					int withAmount = Integer.parseInt(retrieveAmount);
 
 					String uniqueId = deposit_accno_field.getText();
 
+					int balance = calculateBalance(uniqueId);
 					
-					sql = "INSERT INTO bank.withdraw VALUES(" + rand +  ",'" + uniqueId + "', " + withAmount + ", '" + dep_date + "')";
+					System.out.println(balance);
 					
-					stmt.executeUpdate(sql);
+					if(balance > withAmount) {
+						sql = "INSERT INTO bank.withdraw VALUES(" + rand +  ",'" + uniqueId + "', " + withAmount + ", '" + dep_date + "')";
+						
+						stmt.executeUpdate(sql);
+						withdraw_success_lbl.setVisible(true);
+
+					} else {
+						withdraw_fail_lbl.setVisible(true);
+					}
+					
+					
 					
 					int balanceField = calculateBalance(uniqueId);
 					String a = Integer.toString(balanceField);
 					withdraw_balance_field.setText(a);
 					
-					account_success_message.setVisible(true);
+					
 					
 					stmt.close();
 					conn.close();
@@ -739,6 +766,10 @@ public class BankingApplication {
 		withdraw_back_btn.setForeground(Color.WHITE);
 		withdraw_back_btn.setFont(new Font("Tahoma", Font.BOLD, 14));
 		withdraw_back_btn.setBackground(Color.DARK_GRAY);
+		
+
+		
+
 		
 		
 		//STATEMENT
@@ -804,13 +835,9 @@ public class BankingApplication {
 		Statement.add(statement_tarea_panel);
 		statement_tarea_panel.setLayout(null);
 		
-		JTextArea statement_dep_text_area = new JTextArea();
-		statement_dep_text_area.setBounds(10, 31, 215, 228);
-		statement_tarea_panel.add(statement_dep_text_area);
-		
-		JTextArea statement_with_text_area = new JTextArea();
-		statement_with_text_area.setBounds(235, 31, 219, 228);
-		statement_tarea_panel.add(statement_with_text_area);
+		JScrollPane withdraw_scroll = new JScrollPane();
+		withdraw_scroll.setBounds(443, 31, 11, 228);
+		statement_tarea_panel.add(withdraw_scroll);
 		
 		JLabel lblNewLabel = new JLabel("Money in");
 		lblNewLabel.setForeground(new Color(255, 255, 255));
@@ -823,6 +850,18 @@ public class BankingApplication {
 		lblWithdrawals.setFont(new Font("Tahoma", Font.BOLD, 14));
 		lblWithdrawals.setBounds(305, 6, 107, 14);
 		statement_tarea_panel.add(lblWithdrawals);
+		
+		JScrollPane deposit_scroll = new JScrollPane();
+		deposit_scroll.setBounds(224, 31, 11, 228);
+		statement_tarea_panel.add(deposit_scroll);
+		
+		JTextArea statement_dep_text_area = new JTextArea();
+		statement_dep_text_area.setBounds(10, 31, 214, 228);
+		statement_tarea_panel.add(statement_dep_text_area);
+		
+		JTextArea statement_with_text_area = new JTextArea();
+		statement_with_text_area.setBounds(239, 31, 204, 228);
+		statement_tarea_panel.add(statement_with_text_area);
 		
 		JButton statement_retrieve_btn = new JButton("Statement");
 		statement_retrieve_btn.addActionListener(new ActionListener() {
