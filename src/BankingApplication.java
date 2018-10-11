@@ -3,7 +3,11 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import java.awt.CardLayout;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
 import java.awt.Color;
+import java.awt.Component;
+
 import javax.swing.border.EtchedBorder;
 
 import Banking.model.Account;
@@ -15,11 +19,18 @@ import java.awt.GridLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+
 import java.awt.Panel;
 import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -30,6 +41,11 @@ import java.util.Date;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
 import javax.swing.JTable;
+import java.awt.Canvas;
+import javax.swing.UIManager;
+import javax.swing.JScrollBar;
+import java.awt.SystemColor;
+import javax.swing.JTextArea;
 
 public class BankingApplication {
 
@@ -46,7 +62,6 @@ public class BankingApplication {
 	private JTextField deposit_amount_field;
 	private JTextField withdraw_accountField;
 	private JTextField withdraw_amountField;
-	private JTable table;
 	private JTextField deposit_name_field;
 	private JTextField deposit_balance_field;
 	private JTextField withdraw_name_field;
@@ -56,6 +71,12 @@ public class BankingApplication {
 	public String createAccountName, createAccountAddress, sql;
 	public String retrieveID, retrieveName, retrieveAddress, retrieveAmount;
 	public String uniqueAccId;
+	String retrieveDeposit;
+	int retrieveDepositNum = 0;
+	int retrieveWithdrawNum =0;
+	int finalBalance = 0;
+	private JTextField statement_id_field;
+	
 
 	/**
 	 * Launch the application.
@@ -79,6 +100,65 @@ public class BankingApplication {
 	public BankingApplication() {
 		initialize();
 	}
+	
+	
+	
+	public int calculateBalance(String id) {
+		Connection conn = null;
+		Statement stmt = null;
+		
+		String getID = id;
+		
+		
+		// Retrieve account info
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/bank", "root", "password");
+			stmt = conn.createStatement();
+			
+			String sql;
+			String sqlWithdraw;
+			sql = "SELECT * FROM bank.deposit WHERE account_id ='" + getID + "'";
+			sqlWithdraw = "SELECT * FROM bank.withdraw WHERE account_id ='" + getID + "'";
+
+			ResultSet rsBalance = stmt.executeQuery(sql);
+			
+			
+			while(rsBalance.next()) {
+				
+				retrieveDepositNum += rsBalance.getInt("amount");
+				System.out.println("Deposit: " + retrieveDepositNum);
+
+			}
+			
+			ResultSet rsWithdraw = stmt.executeQuery(sqlWithdraw);
+			
+			while(rsWithdraw.next()) {
+				
+				retrieveWithdrawNum += rsWithdraw.getInt("amount");
+				System.out.println("Withdraw: " + retrieveWithdrawNum);
+
+			}
+			
+			finalBalance = retrieveDepositNum - retrieveWithdrawNum;
+
+			rsBalance.close();
+			rsWithdraw.close();
+			stmt.close();
+			conn.close();
+			retrieveDepositNum = 0;
+			retrieveWithdrawNum = 0;
+			
+		} catch (Exception e) {
+			
+		}
+
+		
+				
+		return finalBalance;
+	}
+	
+	
 
 	/**
 	 * Initialize the contents of the frame.
@@ -144,6 +224,17 @@ public class BankingApplication {
 		HomePage.add(HomeTopPanel);
 		HomeTopPanel.setLayout(null);
 		
+		
+		BufferedImage image = null;
+		try {
+			image = ImageIO.read(new File("C:\\Users\\Admin\\Documents\\Eclipse-workspace\\BankingApp\\src\\bank.png"));
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    JLabel label = new JLabel(new ImageIcon(image));
+	    HomeTopPanel.add(label);
+		
 		JLabel home_title_label = new JLabel("Bank O' Roon");
 		home_title_label.setForeground(Color.CYAN);
 		home_title_label.setBounds(153, 46, 196, 42);
@@ -159,6 +250,8 @@ public class BankingApplication {
 		account_name_label.setForeground(Color.WHITE);
 		account_name_label.setBounds(100, 233, 76, 39);
 		CreateAccount.add(account_name_label);
+		
+
 		
 		JLabel account_address_label = new JLabel("Address:");
 		account_address_label.setForeground(Color.WHITE);
@@ -282,28 +375,28 @@ public class BankingApplication {
 		JLabel lblDepositRoons = new JLabel("Deposit Roons");
 		lblDepositRoons.setForeground(Color.CYAN);
 		lblDepositRoons.setFont(new Font("Tahoma", Font.BOLD, 16));
-		lblDepositRoons.setBounds(177, 180, 170, 14);
+		lblDepositRoons.setBounds(182, 178, 170, 14);
 		Deposit.add(lblDepositRoons);
 		
 		JLabel deposit_accno_label = new JLabel("Account No:");
 		deposit_accno_label.setForeground(Color.WHITE);
 		deposit_accno_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		deposit_accno_label.setBounds(46, 180, 118, 71);
+		deposit_accno_label.setBounds(51, 178, 118, 71);
 		Deposit.add(deposit_accno_label);
 		
 		JLabel deposit_amount_label = new JLabel("Amount:");
 		deposit_amount_label.setForeground(Color.WHITE);
 		deposit_amount_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		deposit_amount_label.setBounds(46, 242, 118, 33);
+		deposit_amount_label.setBounds(51, 240, 118, 33);
 		Deposit.add(deposit_amount_label);
 		
 		deposit_accno_field = new JTextField();
-		deposit_accno_field.setBounds(174, 207, 160, 20);
+		deposit_accno_field.setBounds(179, 205, 160, 20);
 		Deposit.add(deposit_accno_field);
 		deposit_accno_field.setColumns(10);
 		
 		deposit_amount_field = new JTextField();
-		deposit_amount_field.setBounds(174, 250, 160, 20);
+		deposit_amount_field.setBounds(179, 248, 160, 20);
 		Deposit.add(deposit_amount_field);
 		deposit_amount_field.setColumns(10);
 		
@@ -316,24 +409,24 @@ public class BankingApplication {
 		JLabel deposit_name_label = new JLabel("Name:");
 		deposit_name_label.setForeground(Color.WHITE);
 		deposit_name_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		deposit_name_label.setBounds(44, 14, 118, 33);
+		deposit_name_label.setBounds(45, 22, 118, 33);
 		deposit_accountInfo_panel.add(deposit_name_label);
 		
 		JLabel deposit_balance_label = new JLabel("Balance:");
 		deposit_balance_label.setForeground(Color.WHITE);
 		deposit_balance_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		deposit_balance_label.setBounds(44, 57, 118, 33);
+		deposit_balance_label.setBounds(45, 65, 118, 33);
 		deposit_accountInfo_panel.add(deposit_balance_label);
 		
 		deposit_name_field = new JTextField();
 		deposit_name_field.setColumns(10);
-		deposit_name_field.setBounds(173, 22, 160, 20);
+		deposit_name_field.setBounds(174, 30, 160, 20);
 		deposit_name_field.setEditable(false);
 		deposit_accountInfo_panel.add(deposit_name_field);
 		
 		deposit_balance_field = new JTextField();
 		deposit_balance_field.setColumns(10);
-		deposit_balance_field.setBounds(173, 65, 160, 20);
+		deposit_balance_field.setBounds(174, 73, 160, 20);
 		deposit_balance_field.setEditable(false);
 		deposit_accountInfo_panel.add(deposit_balance_field);
 		
@@ -344,6 +437,8 @@ public class BankingApplication {
 				Connection conn = null;
 				Statement stmt = null;
 				
+				String getID = deposit_accno_field.getText().toUpperCase();
+				
 				// Retrieve account info
 				try {
 					Class.forName("com.mysql.jdbc.Driver");
@@ -351,7 +446,7 @@ public class BankingApplication {
 					stmt = conn.createStatement();
 					
 					String sql;
-					sql = "SELECT * FROM bank.account WHERE account_id =1";
+					sql = "SELECT * FROM bank.account WHERE account_id ='" + getID + "'";
 					ResultSet rs = stmt.executeQuery(sql);
 					
 					while(rs.next()) {
@@ -359,6 +454,10 @@ public class BankingApplication {
 						retrieveName = rs.getString("name");
 						retrieveAddress = rs.getString("address");
 					}
+					
+					int balanceField = calculateBalance(getID);
+					String a = Integer.toString(balanceField);
+					deposit_balance_field.setText(a);
 									
 					deposit_accno_field.setText(retrieveID);
 					deposit_name_field.setText(retrieveName);
@@ -375,7 +474,7 @@ public class BankingApplication {
 				
 			}
 		});
-		deposit_retrieve_acc_btn.setBounds(362, 206, 89, 23);
+		deposit_retrieve_acc_btn.setBounds(362, 203, 89, 23);
 		Deposit.add(deposit_retrieve_acc_btn);
 		
 		JButton deposit_deposit_btn = new JButton("Deposit");
@@ -408,6 +507,10 @@ public class BankingApplication {
 					
 					stmt.executeUpdate(sql);
 					
+					int balanceField = calculateBalance(uniqueId);
+					String a = Integer.toString(balanceField);
+					deposit_balance_field.setText(a);
+					
 					account_success_message.setVisible(true);
 					
 					stmt.close();
@@ -419,7 +522,7 @@ public class BankingApplication {
 				
 			}
 		});
-		deposit_deposit_btn.setBounds(362, 249, 89, 23);
+		deposit_deposit_btn.setBounds(362, 246, 89, 23);
 		Deposit.add(deposit_deposit_btn);
 		
 		Panel depositTopPanel = new Panel();
@@ -429,7 +532,7 @@ public class BankingApplication {
 		depositTopPanel.setBackground(new Color(0, 0, 102));
 		
 		JLabel deposit_title_label = new JLabel("Bank O' Roon");
-		deposit_title_label.setBounds(140, 46, 196, 42);
+		deposit_title_label.setBounds(155, 45, 196, 42);
 		depositTopPanel.add(deposit_title_label);
 		deposit_title_label.setForeground(Color.CYAN);
 		deposit_title_label.setFont(new Font("Segoe UI Semibold", Font.BOLD | Font.ITALIC, 31));
@@ -460,29 +563,29 @@ public class BankingApplication {
 		JLabel lblWithdrawRoons = new JLabel("Withdraw Roons");
 		lblWithdrawRoons.setForeground(Color.CYAN);
 		lblWithdrawRoons.setFont(new Font("Tahoma", Font.BOLD, 16));
-		lblWithdrawRoons.setBounds(191, 181, 170, 14);
+		lblWithdrawRoons.setBounds(181, 177, 170, 14);
 		Withdraw.add(lblWithdrawRoons);
 		
 		JLabel withdraw_account_label = new JLabel("Account No:");
 		withdraw_account_label.setForeground(Color.WHITE);
 		withdraw_account_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		withdraw_account_label.setBounds(60, 181, 118, 71);
+		withdraw_account_label.setBounds(50, 177, 118, 71);
 		Withdraw.add(withdraw_account_label);
 		
 		JLabel withdraw_amount_label = new JLabel("Amount:");
 		withdraw_amount_label.setForeground(Color.WHITE);
 		withdraw_amount_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		withdraw_amount_label.setBounds(60, 243, 118, 33);
+		withdraw_amount_label.setBounds(50, 239, 118, 33);
 		Withdraw.add(withdraw_amount_label);
 		
 		withdraw_accountField = new JTextField();
 		withdraw_accountField.setColumns(10);
-		withdraw_accountField.setBounds(188, 208, 160, 20);
+		withdraw_accountField.setBounds(178, 204, 160, 20);
 		Withdraw.add(withdraw_accountField);
 		
 		withdraw_amountField = new JTextField();
 		withdraw_amountField.setColumns(10);
-		withdraw_amountField.setBounds(188, 251, 160, 20);
+		withdraw_amountField.setBounds(178, 247, 160, 20);
 		Withdraw.add(withdraw_amountField);
 		
 		JPanel withdraw_bottom_panel = new JPanel();
@@ -494,23 +597,23 @@ public class BankingApplication {
 		JLabel withdraw_name_label = new JLabel("Name:");
 		withdraw_name_label.setForeground(Color.WHITE);
 		withdraw_name_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		withdraw_name_label.setBounds(59, 11, 118, 33);
+		withdraw_name_label.setBounds(50, 21, 118, 33);
 		withdraw_bottom_panel.add(withdraw_name_label);
 		
 		JLabel withdraw_balance_label = new JLabel("Balance:");
 		withdraw_balance_label.setForeground(Color.WHITE);
 		withdraw_balance_label.setFont(new Font("Tahoma", Font.BOLD, 16));
-		withdraw_balance_label.setBounds(59, 54, 118, 33);
+		withdraw_balance_label.setBounds(50, 64, 118, 33);
 		withdraw_bottom_panel.add(withdraw_balance_label);
 		
 		withdraw_name_field = new JTextField();
 		withdraw_name_field.setColumns(10);
-		withdraw_name_field.setBounds(188, 19, 160, 20);
+		withdraw_name_field.setBounds(179, 29, 160, 20);
 		withdraw_bottom_panel.add(withdraw_name_field);
 		
 		withdraw_balance_field = new JTextField();
 		withdraw_balance_field.setColumns(10);
-		withdraw_balance_field.setBounds(188, 62, 160, 20);
+		withdraw_balance_field.setBounds(179, 72, 160, 20);
 		withdraw_bottom_panel.add(withdraw_balance_field);
 		
 		JButton withdraw_retrieve_btn = new JButton("Retrieve acc.");
@@ -519,6 +622,7 @@ public class BankingApplication {
 				Connection conn = null;
 				Statement stmt = null;
 				
+				String getID = deposit_accno_field.getText().toUpperCase();
 
 				
 				try {
@@ -526,8 +630,10 @@ public class BankingApplication {
 					conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/bank", "root", "password");
 					stmt = conn.createStatement();
 					
+					
+					
 					String sql;
-					sql = "SELECT * FROM bank.account WHERE account_id =1";
+					sql = "SELECT * FROM bank.account WHERE account_id ='" + getID + "'";
 					ResultSet rs = stmt.executeQuery(sql);
 					
 					while(rs.next()) {
@@ -535,6 +641,10 @@ public class BankingApplication {
 						retrieveName = rs.getString("name");
 						retrieveAddress = rs.getString("address");
 					}
+					
+					int balanceField = calculateBalance(getID);
+					String a = Integer.toString(balanceField);
+					withdraw_balance_field.setText(a);
 										
 					withdraw_accountField.setText(retrieveID);
 					withdraw_name_field.setText(retrieveName);
@@ -547,7 +657,7 @@ public class BankingApplication {
 				}
 			}
 		});
-		withdraw_retrieve_btn.setBounds(369, 208, 89, 23);
+		withdraw_retrieve_btn.setBounds(359, 204, 89, 23);
 		Withdraw.add(withdraw_retrieve_btn);
 		
 		JButton withdraw_withdraw_btn = new JButton("Withdraw");
@@ -580,6 +690,10 @@ public class BankingApplication {
 					
 					stmt.executeUpdate(sql);
 					
+					int balanceField = calculateBalance(uniqueId);
+					String a = Integer.toString(balanceField);
+					withdraw_balance_field.setText(a);
+					
 					account_success_message.setVisible(true);
 					
 					stmt.close();
@@ -591,7 +705,7 @@ public class BankingApplication {
 				
 			}
 		});
-		withdraw_withdraw_btn.setBounds(369, 251, 89, 23);
+		withdraw_withdraw_btn.setBounds(359, 247, 89, 23);
 		Withdraw.add(withdraw_withdraw_btn);
 		
 		Panel withdraw_top_panel = new Panel();
@@ -601,7 +715,7 @@ public class BankingApplication {
 		withdraw_top_panel.setBackground(new Color(0, 0, 102));
 		
 		JLabel withdraw_title_label = new JLabel("Bank O' Roon");
-		withdraw_title_label.setBounds(140, 37, 196, 42);
+		withdraw_title_label.setBounds(145, 45, 196, 42);
 		withdraw_top_panel.add(withdraw_title_label);
 		withdraw_title_label.setForeground(Color.CYAN);
 		withdraw_title_label.setFont(new Font("Segoe UI Semibold", Font.BOLD | Font.ITALIC, 31));
@@ -629,21 +743,21 @@ public class BankingApplication {
 		frame.getContentPane().add(Statement, "name_176399466811433");
 		Statement.setLayout(null);
 		
-		Panel panel_3 = new Panel();
-		panel_3.setLayout(null);
-		panel_3.setBackground(new Color(0, 0, 102));
-		panel_3.setBounds(0, 0, 484, 175);
-		Statement.add(panel_3);
+		Panel statement_top_panel = new Panel();
+		statement_top_panel.setLayout(null);
+		statement_top_panel.setBackground(new Color(0, 0, 102));
+		statement_top_panel.setBounds(0, 0, 484, 142);
+		Statement.add(statement_top_panel);
 		
-		JLabel label_5 = new JLabel("Bank O' Roon");
-		label_5.setForeground(Color.CYAN);
-		label_5.setFont(new Font("Segoe UI Semibold", Font.BOLD | Font.ITALIC, 31));
-		label_5.setBounds(148, 59, 196, 42);
-		panel_3.add(label_5);
+		JLabel statement_title = new JLabel("Bank O' Roon");
+		statement_title.setForeground(Color.CYAN);
+		statement_title.setFont(new Font("Segoe UI Semibold", Font.BOLD | Font.ITALIC, 31));
+		statement_title.setBounds(140, 37, 196, 42);
+		statement_top_panel.add(statement_title);
 		
 		JButton statement_back_btn = new JButton("Back");
 		statement_back_btn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent arg0) {
 				HomePage.setVisible(true);
 				Statement.setVisible(false);
 			}
@@ -652,10 +766,97 @@ public class BankingApplication {
 		statement_back_btn.setFont(new Font("Tahoma", Font.BOLD, 14));
 		statement_back_btn.setBackground(Color.DARK_GRAY);
 		statement_back_btn.setBounds(10, 11, 89, 23);
-		panel_3.add(statement_back_btn);
+		statement_top_panel.add(statement_back_btn);
 		
-		table = new JTable();
-		table.setBounds(97, 205, 300, 226);
-		Statement.add(table);
+		statement_id_field = new JTextField();
+		statement_id_field.setBounds(174, 148, 125, 20);
+		Statement.add(statement_id_field);
+		statement_id_field.setColumns(10);
+		
+		JLabel lblEnterId = new JLabel("Enter ID:");
+		lblEnterId.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblEnterId.setForeground(Color.WHITE);
+		lblEnterId.setBounds(98, 148, 66, 14);
+		Statement.add(lblEnterId);
+		
+		JPanel statement_tarea_panel = new JPanel();
+		statement_tarea_panel.setBackground(new Color(128, 128, 128));
+		statement_tarea_panel.setBounds(10, 180, 464, 270);
+		Statement.add(statement_tarea_panel);
+		statement_tarea_panel.setLayout(null);
+		
+		JScrollBar statement_scroll = new JScrollBar();
+		statement_scroll.setForeground(new Color(0, 0, 0));
+		statement_scroll.setBackground(new Color(0, 0, 0));
+		statement_scroll.setBounds(447, 0, 17, 270);
+		statement_tarea_panel.add(statement_scroll);
+		
+		JTextArea statement_text_area = new JTextArea();
+		statement_text_area.setBackground(new Color(211, 211, 211));
+		statement_text_area.setBounds(10, 11, 430, 248);
+		statement_tarea_panel.add(statement_text_area);
+		
+		JButton statement_retrieve_btn = new JButton("Statement");
+		statement_retrieve_btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				Connection conn = null;
+				Statement stmt = null;
+				
+				String getID = statement_id_field.getText().toUpperCase();
+				
+				// Retrieve account info
+				try {
+					Class.forName("com.mysql.jdbc.Driver");
+					conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/bank", "root", "password");
+					stmt = conn.createStatement();
+					
+					String sql;
+					String sqlWithdraw;
+					sql = "SELECT * FROM bank.deposit WHERE account_id ='" + getID + "'";
+					sqlWithdraw = "SELECT * FROM bank.withdraw WHERE account_id ='" + getID + "'";
+
+					ResultSet rsBalance = stmt.executeQuery(sql);
+					while(rsBalance.next()) {
+						
+						retrieveDepositNum = rsBalance.getInt("amount");
+						String depDate = rsBalance.getString("date");
+						
+						statement_text_area.setText("Amount " + "Date" + "\n" + retrieveDepositNum + " " + depDate);
+						
+						System.out.println(retrieveDepositNum + "Deposit:" + depDate);
+
+					}
+					
+					ResultSet rsWithdraw = stmt.executeQuery(sqlWithdraw);
+					
+					while(rsWithdraw.next()) {
+						
+						retrieveWithdrawNum = rsWithdraw.getInt("amount");
+						String withDate = rsWithdraw.getString("date");
+						
+						System.out.println(retrieveDepositNum + "Withdraw:" + withDate);
+
+					}
+					
+					
+
+					rsBalance.close();
+					rsWithdraw.close();
+					stmt.close();
+					conn.close();
+					retrieveDepositNum = 0;
+					retrieveWithdrawNum = 0;
+					
+				} catch (Exception exc) {
+					
+				}
+				
+			}
+		});
+		statement_retrieve_btn.setBounds(309, 147, 89, 23);
+		Statement.add(statement_retrieve_btn);
+		
+
 	}
 }
